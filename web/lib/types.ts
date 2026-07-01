@@ -31,6 +31,8 @@ export interface Update {
   title: string;
   summary: string | null;
   version: string | null;
+  /** 1-5 importance score set by the scraper (5 = major launch). Optional until scored. */
+  importance?: number;
   source_url: string;
   published_at: string | null;
   created_at: string;

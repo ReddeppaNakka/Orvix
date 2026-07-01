@@ -27,7 +27,8 @@ export default function HotTopicsFeed({
         {items.map((u) => (
           <Link
             key={u.id}
-            href={`/topic/${u.technology.slug}`}
+            href={`/?topic=${u.technology.slug}`}
+            scroll={false}
             className="group flex items-center gap-4 px-5 py-4 transition hover:bg-white/[0.04]"
           >
             <div className="min-w-0 flex-1">

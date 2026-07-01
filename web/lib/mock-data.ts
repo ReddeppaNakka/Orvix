@@ -149,6 +149,7 @@ export const mockUpdates: Update[] = [
     summary:
       "Expanded long-context reasoning and stronger agentic coding performance across the board.",
     version: "4.8",
+    importance: 5,
     source_url: "https://www.anthropic.com/news",
     published_at: "2026-06-29T12:00:00.000Z",
     created_at: now,
@@ -159,6 +160,7 @@ export const mockUpdates: Update[] = [
     title: "Next.js 15.1 improves the App Router and caching defaults",
     summary: "Refined ISR semantics and faster cold starts for server components.",
     version: "15.1",
+    importance: 4,
     source_url: "https://nextjs.org/blog",
     published_at: "2026-06-28T09:30:00.000Z",
     created_at: now,
@@ -169,6 +171,7 @@ export const mockUpdates: Update[] = [
     title: "Gemini 2.5 adds extended multimodal tool use",
     summary: "Native video understanding and improved function-calling reliability.",
     version: "2.5",
+    importance: 4,
     source_url: "https://blog.google",
     published_at: "2026-06-27T15:45:00.000Z",
     created_at: now,

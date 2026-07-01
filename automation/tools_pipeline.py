@@ -76,14 +76,24 @@ ITEMS_PER_DISCOVERY = 12
 # --------------------------------------------------------------------------- #
 # LLM helpers
 # --------------------------------------------------------------------------- #
+def _importance(v) -> int:
+    """Coerce an LLM importance value into an int in [1, 5]; default 2 if unusable."""
+    try:
+        return max(1, min(5, int(v)))
+    except (TypeError, ValueError):
+        return 2
+
+
 def structure_known(title: str, content: str) -> dict:
-    """Condense a targeted-feed item into clean fields (title/summary/version)."""
-    fallback = {"title": title[:90], "summary": (content or "")[:200] or None, "version": None}
+    """Condense a targeted-feed item into clean fields (title/summary/version/importance)."""
+    fallback = {"title": title[:90], "summary": (content or "")[:200] or None, "version": None, "importance": 2}
     data = llm_json(
         "You are a precise tech-news editor. Given a raw feed item, return STRICT JSON:\n"
         '{"title": "<concise headline, max 90 chars>",\n'
         ' "summary": "<one neutral sentence, max 200 chars>",\n'
-        ' "version": "<version string introduced, or null>"}\n\n'
+        ' "version": "<version string introduced, or null>",\n'
+        ' "importance": <integer 1-5: 5=major launch/new version/model release, '
+        '3=notable update, 1=minor or tangential news>}\n\n'
         f"Raw title: {title}\nRaw content: {content[:1500]}\n\n"
         "Return ONLY the JSON object."
     )
@@ -93,6 +103,7 @@ def structure_known(title: str, content: str) -> dict:
         "title": (data.get("title") or title)[:90],
         "summary": data.get("summary"),
         "version": data.get("version"),
+        "importance": _importance(data.get("importance")),
     }
 
 
@@ -114,9 +125,11 @@ def classify_discovery(title: str, content: str) -> dict | None:
         ' "category": "Frontier Models|Languages|Frameworks|AI Tools|Developer Tools",\n'
         ' "accent_color": "violet|cyan|emerald",\n'
         ' "tagline": "<=70 char one-liner>",\n'
+        ' "homepage_url": "<official site URL if known, else null>",\n'
         ' "title": "<=90 char headline>",\n'
         ' "summary": "<=200 char neutral sentence>",\n'
-        ' "version": "<version if any, else null>"}\n\n'
+        ' "version": "<version if any, else null>",\n'
+        ' "importance": <integer 1-5: 5=major launch/release, 3=notable, 1=minor>}\n\n'
         f"Item title: {title}\nItem content: {content[:1500]}\n\n"
         "Return ONLY the JSON object.",
         max_tokens=350,
@@ -129,15 +142,20 @@ def classify_discovery(title: str, content: str) -> dict | None:
         return None
     category = data.get("category") if data.get("category") in ALLOWED_CATEGORIES else "AI Tools"
     accent = data.get("accent_color") if data.get("accent_color") in ALLOWED_ACCENTS else "cyan"
+    homepage = data.get("homepage_url")
+    if not (isinstance(homepage, str) and homepage.startswith("http")):
+        homepage = None
     return {
         "slug": slug,
         "name": name[:60],
         "category": category,
         "accent_color": accent,
         "tagline": (data.get("tagline") or None),
+        "homepage_url": homepage,
         "title": (data.get("title") or title)[:90],
         "summary": data.get("summary"),
         "version": data.get("version"),
+        "importance": _importance(data.get("importance")),
     }
 
 
@@ -156,17 +174,20 @@ def get_or_create_technology(db: Client, slug: str, defaults: dict) -> str | Non
 
 
 def insert_update(db: Client, tech_id: str, fields: dict, source_url: str, published: str | None):
+    # Upsert on source_url (unique). We DON'T ignore duplicates so re-runs refresh the
+    # importance score on items still appearing in feeds — old items that drop off keep
+    # their last score (and are excluded from highlights by the 7-day window anyway).
     db.table("updates").upsert(
         {
             "technology_id": tech_id,
             "title": fields["title"],
             "summary": fields["summary"],
             "version": fields["version"],
+            "importance": fields.get("importance", 2),
             "source_url": source_url,
             "published_at": published,
         },
         on_conflict="source_url",
-        ignore_duplicates=True,
     ).execute()
     if fields.get("version"):
         db.table("technologies").update({"current_version": fields["version"]}).eq(
@@ -230,6 +251,7 @@ def run(db: Client) -> int:
                     "category": info["category"],
                     "accent_color": info["accent_color"],
                     "tagline": info["tagline"],
+                    "homepage_url": info.get("homepage_url"),
                 },
             )
             if not tech_id:

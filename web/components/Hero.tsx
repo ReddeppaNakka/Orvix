@@ -1,16 +1,19 @@
-import type { Update } from "@/lib/types";
+import Link from "next/link";
+import type { Update, Technology } from "@/lib/types";
 
 /**
  * High-impact hero header.
  * Shows a live, auto-generated summary line plus the freshest few headlines
- * so the homepage always reflects the latest scrape.
+ * so the homepage always reflects the latest scrape. Each headline opens the
+ * detail popup (via /?topic=<slug>) rather than the external source link.
  */
 export default function Hero({
   totalTracked,
   latest,
 }: {
   totalTracked: number;
-  latest: Update[];
+  // Each update is pre-joined with its parent technology's slug.
+  latest: (Update & { technology: Pick<Technology, "slug"> })[];
 }) {
   return (
     <header className="relative mx-auto max-w-6xl px-6 pb-10 pt-20 text-center">
@@ -32,11 +35,10 @@ export default function Hero({
       {latest.length > 0 && (
         <div className="mx-auto mt-10 flex max-w-3xl flex-col gap-2 text-left">
           {latest.map((u) => (
-            <a
+            <Link
               key={u.id}
-              href={u.source_url}
-              target="_blank"
-              rel="noreferrer"
+              href={`/?topic=${u.technology.slug}`}
+              scroll={false}
               className="glass group flex items-center justify-between rounded-xl px-4 py-3 text-sm transition hover:border-white/20"
             >
               <span className="truncate text-zinc-200">{u.title}</span>
@@ -45,7 +47,7 @@ export default function Hero({
                   ? new Date(u.published_at).toLocaleDateString()
                   : "new"}
               </span>
-            </a>
+            </Link>
           ))}
         </div>
       )}

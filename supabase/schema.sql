@@ -50,6 +50,11 @@ create table if not exists public.updates (
 create index if not exists updates_technology_idx on public.updates (technology_id);
 create index if not exists updates_published_idx  on public.updates (published_at desc);
 
+-- Importance score 1-5 (5 = major launch/release, 1 = minor/tangential news). Set by the
+-- scraper's LLM. Drives the "This week's highlights" section so big releases stay pinned.
+alter table public.updates add column if not exists importance smallint not null default 1;
+create index if not exists updates_importance_idx on public.updates (importance desc, published_at desc);
+
 -- ----------------------------------------------------------------------------
 -- OPPORTUNITIES
 -- Hackathons, competitions, conferences, internships & entry-level jobs aimed

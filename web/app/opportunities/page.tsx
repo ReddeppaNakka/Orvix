@@ -23,7 +23,12 @@ export default async function OpportunitiesPage() {
     .order("is_featured", { ascending: false })
     .order("deadline", { ascending: true, nullsFirst: false });
 
-  const opportunities = (data ?? []) as Opportunity[];
+  // Only show currently-open opportunities: evergreen (no deadline) or deadline not yet
+  // passed — so a listing stays up until its last date, then drops off automatically.
+  const now = Date.now();
+  const opportunities = ((data ?? []) as Opportunity[]).filter(
+    (o) => !o.deadline || new Date(o.deadline).getTime() >= now,
+  );
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-6 py-16">
