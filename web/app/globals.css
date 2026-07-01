@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Base premium dark canvas ---- */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #08080c; /* canvas */
+  color: rgb(228 228 231); /* zinc-200 */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Faint dotted grid backdrop for depth */
+body {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 0
+  );
+  background-size: 28px 28px;
+}
+
+/* ---- Reusable glassmorphism surface ---- */
+@layer components {
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10;
+  }
+}
+
+/* Sleek thin scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.35);
+  border-radius: 9999px;
+}

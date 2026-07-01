@@ -1,0 +1,35 @@
+name: Daily Tech Update
+
+on:
+  schedule:
+    # 06:00 UTC every day. (GitHub cron is always UTC.)
+    - cron: "0 6 * * *"
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        working-directory: automation
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        working-directory: automation
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          # Optional overrides — defaults in scraper.py target Groq's free tier.
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        run: python scraper.py

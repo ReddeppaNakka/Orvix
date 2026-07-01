@@ -1,0 +1,20 @@
+# Node / Next.js
+web/node_modules/
+web/.next/
+web/out/
+web/.vercel/
+
+# Env files (never commit secrets)
+**/.env
+**/.env.local
+!**/.env.example
+!**/.env.local.example
+
+# Python
+automation/.venv/
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
